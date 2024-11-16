@@ -1,0 +1,7 @@
+flask
+flask-cors
+gradio==5.5.0
+gradio-client
+Werkzeug
+requests
+python-dotenv

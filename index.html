@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #4f46e5;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary-color);
+            background: #f8fafc;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background: #eef2ff;
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone p {
+            color: var(--text-secondary);
+            margin: 0.5rem 0;
+        }
+
+        .prompt-container {
+            margin: 2rem 0;
+        }
+
+        .prompt-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: var(--text-secondary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: #fef2f2;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .result-container {
+            margin-top: 2rem;
+        }
+
+        .result-image {
+            width: 60%;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .result-image:hover {
+            transform: scale(1.01);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .success-message {
+            display: none;
+            background: #f0fdf4;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .button-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Image Generator</h1>
+            <p>Transform your images with advanced AI technology</p>
+        </div>
+
+        <div class="card">
+            <div id="drop-zone" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drop your image here</h3>
+                <p>or click to browse</p>
+                <p class="file-info" style="display: none;"></p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="prompt-container">
+                <label class="prompt-label" for="prompt">Prompt</label>
+                <textarea id="prompt" placeholder="Describe how you want to transform your image..."></textarea>
+            </div>
+
+            <div class="button-container">
+                <button id="generate-btn" disabled>
+                    <i class="fas fa-magic"></i>
+                    Generate Image
+                </button>
+            </div>
+
+            <div id="error" class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="error-message"></span>
+            </div>
+
+            <div id="success" class="success-message">
+                <i class="fas fa-check-circle"></i>
+                Image generated successfully!
+            </div>
+
+            <div id="loading">
+                <div class="loading-spinner"></div>
+                Creating your masterpiece...
+            </div>
+        </div>
+
+        <div id="result-container" class="card" style="display: none;">
+            <h3 style="margin-bottom: 1rem;">Generated Image</h3>
+            <div id="result-image-container"></div>
+            <div class="button-container">
+                <button id="download-btn">
+                    <i class="fas fa-download"></i>
+                    Download Image
+                </button>
+                <button id="generate-new-btn" style="background-color: #4b5563;">
+                    <i class="fas fa-plus"></i>
+                    Generate New
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+        const resultContainer = document.getElementById('result-container');
+        const downloadBtn = document.getElementById('download-btn');
+        const generateNewBtn = document.getElementById('generate-new-btn');
+        const fileInfo = document.querySelector('.file-info');
+        let selectedFile = null;
+
+        // Drop zone event listeners
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFile(files[0]);
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        generateNewBtn.addEventListener('click', () => {
+            resultContainer.style.display = 'none';
+            selectedFile = null;
+            fileInfo.style.display = 'none';
+            dropZone.querySelector('h3').textContent = 'Drop your image here';
+            dropZone.querySelector('p').style.display = 'block';
+            generateBtn.disabled = true;
+        });
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                selectedFile = file;
+                const fileName = file.name;
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                
+                dropZone.querySelector('h3').textContent = 'Selected File:';
+                dropZone.querySelector('p').style.display = 'none';
+                fileInfo.textContent = `${fileName} (${fileSize} MB)`;
+                fileInfo.style.display = 'block';
+                
+                generateBtn.disabled = false;
+                errorDiv.style.display = 'none';
+            } else {
+                errorDiv.querySelector('.error-message').textContent = 'Please select a valid image file.';
+                errorDiv.style.display = 'block';
+                generateBtn.disabled = true;
+            }
+        }
+
+        generateBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('prompt', document.getElementById('prompt').value);
+
+            loading.style.display = 'block';
+            generateBtn.disabled = true;
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            resultContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const timestamp = new Date().getTime();
+                    const imageUrl = `/generated_image.webp?t=${timestamp}`;
+                    
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imageUrl;
+                    imgElement.className = 'result-image';
+                    
+                    const resultImageContainer = document.getElementById('result-image-container');
+                    resultImageContainer.innerHTML = '';
+                    resultImageContainer.appendChild(imgElement);
+                    
+                    resultContainer.style.display = 'block';
+                    successDiv.style.display = 'block';
+                    
+                    downloadBtn.onclick = () => {
+                        const a = document.createElement('a');
+                        a.href = imageUrl;
+                        a.download = 'generated_image.webp';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    };
+                } else {
+                    throw new Error(data.error || 'Failed to generate image');
+                }
+            } catch (error) {
+                errorDiv.querySelector('.error-message').textContent = error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
